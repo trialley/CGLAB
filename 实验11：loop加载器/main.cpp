@@ -9,6 +9,7 @@
 #pragma comment(lib, "./glut32.lib")
 using namespace std;
 
+
 /*¼ÓÔØÆ÷*/
 offloader loader;
 
