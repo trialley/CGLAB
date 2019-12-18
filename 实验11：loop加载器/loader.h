@@ -5,6 +5,9 @@
 #include<string>
 #include<queue>
 #include<string>
+#include<vector>
+#include<map>
+#include<set>
 #include "glut.h"
 #pragma comment(lib, "./glut32.lib")
 using namespace std;
@@ -41,11 +44,11 @@ public:
 	struct he_face;
 	struct normalVec;
 	struct nedge;
-	vertex* vertexs;
-	face* faces;
-	he_face** hefaces;
-	normalVec* normalvectors;
-	nedge** iedges;
+	vector<vertex> vertexs;
+	vector<face> faces;
+	vector<he_face*> hefaces;
+	vector<normalVec> normalvectors;
+	vector<nedge*> iedges;
 
 
 	struct halfedge {//半边结构
@@ -152,6 +155,17 @@ public:
 
 
 	//}
+	void insertIedge (vector<nedge*>& iedges, nedge* ie) {
+		nedge* it = iedges[ie->start];
+		if (it == nullptr) {
+			iedges[ie->start] = ie;
+		} else {
+			while (it->next != nullptr) {
+				it = it->next;
+			}
+			it->next = ie;
+		}
+	}
 	void readoff (string file) {//读取文件
 		char data[100];
 		ifstream infile;
@@ -160,8 +174,8 @@ public:
 		infile >> numOfVertex;
 		infile >> numOfFace;
 		infile >> numOfLine;
-		vertexs = new vertex[numOfVertex];
-		faces = new face[numOfFace];
+		vertexs.resize (numOfVertex, vertex ());
+		faces.resize (numOfFace, face ());
 		int vnum = 0;
 		int fnum = 0;
 		while (vnum < numOfVertex) {//读顶点信息
@@ -189,7 +203,7 @@ public:
 		}
 		infile.close ();
 	}
-	int getMiddle (int start, int end, nedge** iedges) {
+	int getMiddle (int start, int end, vector<nedge*>& iedges) {
 		nedge* temp = iedges[start];
 		while (temp != nullptr) {
 			if (temp->he->end == end) {
@@ -204,7 +218,7 @@ public:
 		}
 
 	}
-	halfedge* getHalfEdge (int start, int end, nedge** iedges) {
+	halfedge* getHalfEdge (int start, int end, vector<nedge*>& iedges) {
 		nedge* temp = iedges[start];
 		while (temp != nullptr) {
 			if (temp->he->end == end) {
@@ -220,7 +234,7 @@ public:
 
 	}
 	void initHalfedge () {//初始化半边
-		hefaces = new he_face * [numOfFace];
+		hefaces.resize (numOfFace, nullptr);
 		int numofhe = 0;
 		for (int i = 0; i < numOfVertex; i++) {
 			iedges[i] = nullptr;
@@ -352,7 +366,7 @@ public:
 		}
 
 	}
-	
+
 	//画出模型
 	void drawModel () {
 		glClearColor (0.0f, 0.0f, 0.0f, 0.0f);
@@ -373,19 +387,8 @@ public:
 		glutSwapBuffers ();
 		glFlush ();
 	}
-	void insertIedge (nedge** iedges, nedge* ie) {
-		nedge* it = iedges[ie->start];
-		if (it == nullptr) {
-			iedges[ie->start] = ie;
-		} else {
-			while (it->next != nullptr) {
-				it = it->next;
-			}
-			it->next = ie;
-		}
-	}
 	void computeNormalVec () {
-		normalvectors = new normalVec[numOfFace];
+		normalvectors.resize (numOfFace, normalVec ());
 		for (int i = 0; i < numOfFace; i++) {
 			halfedge* hef = hefaces[i]->edge;
 			int v0 = hef->next->next->end;
@@ -404,12 +407,12 @@ public:
 		}
 	}
 
-//loop细分算法
+	//loop细分算法
 	void loop () {
 
-		vertex* newvertexs = new vertex[numOfVertex + 1.5 * numOfFace];	//新添加顶点数组
-		he_face** nfaces = new he_face * [4 * numOfFace];	//新添加面数组
-		nedge** niedges = new nedge * [numOfVertex + 1.5 * numOfFace];	//新nedge数组
+		vector<vertex> newvertexs (numOfVertex + 1.5 * numOfFace, vertex ());	//新添加顶点数组
+		vector<he_face*> nfaces (4 * numOfFace, nullptr);	//新添加面数组
+		vector<nedge*> niedges (numOfVertex + 1.5 * numOfFace, nullptr);	//新nedge数组
 		int numoff = 0;	//新添加面数
 		int numofv = 0;//新添加点数
 		for (int i = 0; i < numOfVertex + 1.5 * numOfFace; i++) {
@@ -424,12 +427,12 @@ public:
 				n++;//统计该点有多少邻接点
 				halfedge* thedge = hedge->opposite->next;//出去
 				if (thedge) {
-				hedge = hedge->opposite->next;//回来
+					hedge = hedge->opposite->next;//回来
 
-				}else { cout << "无法细分\n"; return; }
+				} else { cout << "无法细分\n"; return; }
 			} while (hedge != vertexs[i].edge);
 
-			 //计算beta
+			//计算beta
 			float beta = (5.0 / 8 - pow ((3.0 / 8 + cos (2 * PI / n) / 4), 2)) / n;
 
 			float sumpx = 0;
@@ -596,9 +599,6 @@ public:
 		}
 
 		//释放原来的老点、老边、老面
-		free (hefaces);
-		free (vertexs);
-		free (iedges);
 		vertexs = newvertexs;
 		iedges = niedges;
 		hefaces = nfaces;
@@ -878,7 +878,7 @@ public:
 	}
 	void load (string file) {
 		readoff (file);
-		iedges = new nedge * [numOfVertex];
+		iedges.resize (numOfVertex, nullptr);
 		initHalfedge ();
 		cout << "加载完成" << endl;
 		computeNormalVec ();
@@ -914,7 +914,7 @@ public:
 		displaystate = 2;
 		PI = 3.1415926;
 		readoff (file);
-		iedges = new nedge * [numOfVertex];
+		iedges.resize (numOfVertex, nullptr);
 		initHalfedge ();
 		cout << "重新加载完成" << endl;
 		computeNormalVec ();
