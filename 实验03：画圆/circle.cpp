@@ -52,7 +52,7 @@ namespace TA{
 		}
 
 		/*还有一种方法是将d的计算放大两倍，同时将初始值改成3 – 2R，这样避免了浮点运算，
-乘二运算也可以用移位快速代替，采用3 – 2R为初始值的改进算法，又称为Bresenham算法：*/
+		乘二运算也可以用移位快速代替，采用3 – 2R为初始值的改进算法，又称为Bresenham算法：*/
 		void drawCircleBresenham (int x0, int y0, int r) {
 			/*用于绘制对称点的内部函数*/
 			auto wholeC = [](int xc, int yc, int x, int y, GLfloat color)->void {

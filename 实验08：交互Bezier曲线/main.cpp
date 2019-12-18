@@ -1,7 +1,7 @@
-#include<GL/glut.h>
 #include<vector>
 #include<algorithm>
 #include<iostream>
+#include"glut.h"
 #define DEBUG
 #ifdef DEBUG
 #define dprintf printf
@@ -31,14 +31,15 @@ void drawLine (point& p1, point& p2) {
 	glEnd ();
 }
 
-void drawBezier (points& points,int segi) {
+void drawDEBOORBezier (points& points,int segi) {
 
 		int n = points.size ();
 		vector<point> news;
-		double d = 1.0 / ( segi* n);
-
+		//double d = 1.0 / (segi * n);
+		double d = 1.0 /  (float)segi;
+		//cout << "t=" << d<<"\n";
 		/*进行递推的循环，共需要进行n-1次递推计算*/
-		for (float t = 0.0; t <= 1; t += d) {
+		for (double t = 0.0; t <= 1; t += d) {
 			vector<point> temp;
 
 			/*第 i 次递推，需要计算n-i个新的点*/
@@ -68,6 +69,8 @@ void drawBezier (points& points,int segi) {
 		for (int i = 0; i < news.size () - 1; i++) {
 			drawLine (news[i], news[i + 1]);
 		}
+		//封口
+		drawLine (news[news.size () - 1], points[points.size () - 1]);
 
 
 }
@@ -84,6 +87,28 @@ addstate addstated= ADD;
 state stated = DRAWING_POLY;
 point* chosed_point = nullptr;
 int segi = 1;
+void segiinc () {
+	if (segi >= 20) {
+		cout << "精度过大\n";
+	} else {
+		segi++;
+		cout << "分段"<<segi<<"\n";
+
+	}
+	double d = 1.0 / (float)segi;
+	cout << "t=" << d << "\n";
+}
+void segidec () {
+	if (segi <= 1) {
+		cout << "无法继续减少精度\n";
+	} else {
+		segi--;
+		cout << "分段" << segi << "\n";
+
+	}
+	double d = 1.0 / (float)segi;
+	cout << "t=" << d << "\n";
+}
 void display (void) {
 	glClear (GL_COLOR_BUFFER_BIT);
 
@@ -94,7 +119,7 @@ void display (void) {
 	}
 
 	if (temp_poly.size () >= 2) {
-		drawBezier (temp_poly, segi);
+		drawDEBOORBezier (temp_poly, segi);
 	}
 
 
@@ -146,6 +171,14 @@ void mouseButton (int button, int state, int xi, int yi) {
 	float x = xi;
 	float y = SCREENY - yi;
 	point temp_point = { x,y };
+
+	if (button == GLUT_WHEEL_DOWN) {
+		segidec ();
+	}
+	if (button == GLUT_WHEEL_UP) {
+		segiinc ();
+	}
+
 	switch (stated) {
 	case MOVING_POINT:
 		if (button == GLUT_MIDDLE_BUTTON && state == GLUT_UP) {
@@ -211,6 +244,8 @@ void mouseButton (int button, int state, int xi, int yi) {
 	default:
 		break;
 	}
+	glutPostRedisplay ();
+
 }
 
 
@@ -224,7 +259,6 @@ void mouseMove (int xi, int yi) {
 		chosed_point->x = x;
 		chosed_point->y = y;
 		dprintf ("当前点新位置(%f, %f)\n", chosed_point->x, chosed_point->y);
-		glutPostRedisplay ();
 		break;
 	case ADDING_POINT:
 		break;
@@ -236,6 +270,8 @@ void mouseMove (int xi, int yi) {
 	default:
 		break;
 	}
+	glutPostRedisplay ();
+
 }
 
 void menuCtr (int funci) {

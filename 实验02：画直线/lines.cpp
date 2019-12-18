@@ -21,7 +21,6 @@ namespace TA{
 			y = y + k;
 		}
 	}
-
 	void drawlineDDA (int x1, int y1, int x2, int y2) {
 		if (x1 > x2) {
 			swap (x1, x2);
@@ -48,7 +47,6 @@ namespace TA{
 			y = y + k;
 		}
 	}
-
 	void drawlinecpr (int x1, int y1, int x2, int y2) {
 		if (x1 > x2) {
 			swap (x1, x2);
@@ -164,36 +162,33 @@ namespace TA{
 	//为免于浮点运算等，次用对e，d，k等乘以2dx，以将所有计算转化为整数
 	void drawBresenham (int x1, int y11, int x2, int y2) {
 
+		/*将原来的各种反转做反动坐*/
 		auto drawpoint = [] (int x, int y, int k_kind, int d_kind)->void{
-			if (k_kind == 0 && d_kind == 1) {
+			if (k_kind == 0 && d_kind == 1) {//向下画，则将y反转，x轴对称
 				y = -y;
-			} else if (k_kind == 1 && d_kind == 1) {
-				x = -x;
+			} else if (k_kind == 1 && d_kind == 1) {//x且x=y，两次反转
 				swap (x, y);
-			} else if (k_kind == 1 && d_kind == 0) {
+				y = -y;
+			} else if (k_kind == 1 && d_kind == 0) {//如果原来斜率陡峭，则x=y反转
 				swap (x, y);
 			}
 			pannal::drawPixel (x, y);
 		};
-		/*
-		 函数说明：bresenham算法部分
-		 参数说明：与openGL已有的划线函数一样，要求用户提供的是点的起点（x1,y11）和终点(x2,y2)
-		 为了便于观察，我们会绘制原像素下的直线。
-		 这里的坐标要求是-1 ～ 1
-		 */
-		int k_kind = 0; //k_kind用来表示斜率的类型。0是0～1；1是1～无穷；2是0～-1；3是负无穷～-1
-		int d_kind = 0; //d_kind用来表示dy正负的类型。
+
+		int k_kind = 0; //k_kind 1表示斜率绝对值大于1 陡峭，0表示小于1 平缓
+		int d_kind = 0; //d_kind用来表示dy正负的类型,也即画点的顺序。默认向上画
 		if (x1 > x2) {
 			swap (x1, x2);
 			swap (y11, y2);
 		}
-		int dx = abs (x2 - x1), dy = abs (y2 - y11);
-		if (y11 > y2) {//如果是向下的
+		int dx = abs (x2 - x1);
+		int dy = abs (y2 - y11);
+		if (y11 > y2) {//如果是向下画的，将其转换为向上画，x轴对称
 			y11 = -y11;
 			y2 = -y2;
 			d_kind = 1;
 		}
-		if (dy > dx) { //斜率介于1～无穷的，将看作坐标系变换（这里将坐标变换）。
+		if (dy > dx) { //如果斜率绝对值大于1，则使其坐标轴小于1，x=y对称
 			swap (x1, y11);
 			swap (x2, y2);
 			swap (dx, dy);

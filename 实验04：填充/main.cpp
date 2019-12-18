@@ -14,9 +14,10 @@ using namespace std;
 /*------------------绘图算法相关-----------------*/
 /*活性边表 多边行扫描转换*/
 typedef struct XET {
-	float x;
-	float dx, ymax;
-	XET* next;
+	float x;//当前x坐标，用于填充
+	float dx;//y上移一位，需要x增加多少
+	float ymax;//y达到此值，边就被删除
+	XET* next;//指向下一个边
 } AET, NET;
 
 typedef struct point {
@@ -28,6 +29,50 @@ bool operator == (point& p1, point p2) {
 }
 typedef vector<point> points;
 typedef vector<points> polys;
+
+AET* merge (AET* l1, AET* l2) {
+	AET* dummy = new AET ();
+	AET* cur = dummy;
+	while (l1 && l2) {
+		if (l1->x < l2->x) {
+			cur->next = l1;
+			l1 = l1->next;
+		} else {
+			cur->next = l2;
+			l2 = l2->next;
+		}
+		cur = cur->next;
+	}
+	if (l1) cur->next = l1;
+	if (l2) cur->next = l2;
+	return dummy->next;
+}
+AET* sortList (AET* head) {
+	if (!head || !head->next) return head;
+	AET* slow = head, * fast = head, * pre = head;
+	while (fast && fast->next) {
+		pre = slow;
+		slow = slow->next;
+		fast = fast->next->next;
+	}
+	pre->next = NULL;
+	return merge (sortList (head), sortList (slow));
+}
+//AET* tq = pAET;
+//p = pAET->next;
+//tq->next = NULL;//最终指向比p的x值大的第一个节点的父节点
+//while (p) {
+//	while (tq->next && p->x >= tq->next->x)
+//		tq = tq->next;
+
+//	//将p插入到父节点与子节点之间
+//	NET* s = p->next;
+//	p->next = tq->next;
+//	tq->next = p;
+//	p = s;
+//	tq = pAET;
+//}
+
 void drawAET (points& polypoint) {
 
 
@@ -40,23 +85,21 @@ void drawAET (points& polypoint) {
 		if (polypoint[i].y > MaxY)
 			MaxY = polypoint[i].y;
 
-	/*******初始化AET表***********************************************************/
-	AET* pAET = new AET;
-	pAET->next = NULL;
-
 	/******初始化NET表************************************************************/
 	NET* pNET[1024];
 	for (i = 0; i <= MaxY; i++) {
 		pNET[i] = new NET;
 		pNET[i]->next = NULL;
 	}
-	glColor3f (1.0, 1.0, 1.0);             //设置直线的颜色红色
+	glColor3f (1.0, 1.0, 1.0);             //设置直线的颜色
 	glBegin (GL_POINTS);
-	/******扫描并建立NET表*********************************************************/
-	for (i = 0; i <= MaxY; i++) {
+	//扫描并建立NET表****新增边表
+	for (i = 0; i <= MaxY; i++) {//对于每一条扫描线
 		for (int j = 0; j < POINTNUM; j++)
-			if (polypoint[j].y == i) {
+			if (polypoint[j].y == i) {//找到以该扫描线y值为起点的线条
 				//一个点跟前面的一个点形成一条线段，跟后面的点也形成线段
+
+				//找到以该y为下点的线
 				if (polypoint[(j - 1 + POINTNUM) % POINTNUM].y > polypoint[j].y) {
 					NET* p = new NET;
 					p->x = polypoint[j].x;
@@ -75,29 +118,26 @@ void drawAET (points& polypoint) {
 				}
 			}
 	}
-	/******建立并更新活性边表AET*****************************************************/
+
+
+	//初始化AET链表
+	AET* pAET = new AET;
+	pAET->next = NULL;
+
+	/*不断更新活性边表AET 添加或删除*/
 	for (i = 0; i <= MaxY; i++) {
-		//计算新的交点x,更新AET
-		NET* p = pAET->next;
+		//计算新的交点x,更新AET，第一次循环不会更新任何值
+		AET* p = pAET->next;
 		while (p) {
 			p->x = p->x + p->dx;
 			p = p->next;
 		}
-		//更新后新AET先排序*************************************************************/
-		//断表排序,不再开辟空间
-		AET* tq = pAET;
-		p = pAET->next;
-		tq->next = NULL;
-		while (p) {
-			while (tq->next && p->x >= tq->next->x)
-				tq = tq->next;
-			NET* s = p->next;
-			p->next = tq->next;
-			tq->next = p;
-			p = s;
-			tq = pAET;
-		}
-		//(改进算法)先从AET表中删除ymax==i的结点****************************************/
+
+		//更新后AET链表先按照x坐标排序 因为填充是从左往右填
+		sortList (pAET);
+
+
+		//删除达到ymax的边
 		AET* q = pAET;
 		p = q->next;
 		while (p) {
@@ -110,7 +150,8 @@ void drawAET (points& polypoint) {
 				p = q->next;
 			}
 		}
-		//将NET中的新点加入AET,并用插入法按X值递增排序**********************************/
+
+		//获取扫描线新接触的边
 		p = pNET[i]->next;
 		q = pAET;
 		while (p) {
@@ -122,13 +163,18 @@ void drawAET (points& polypoint) {
 			p = s;
 			q = pAET;
 		}
-		/******配对填充颜色***************************************************************/
+		
+		//对一条扫描线进行填充
 		glColor3f (1, 1, 1);
 		p = pAET->next;
+
+		//遍历当前扫描线所有边
 		while (p && p->next) {
 			for (float j = p->x; j <= p->next->x; j++)
-				glVertex2i (static_cast<int> (j), i);
-			p = p->next->next;//考虑端点情况
+				glVertex2i (j, i);//画点，从x画到下一个边的x
+
+			//跳过下一边，直接进入下下条边
+			p = p->next->next;
 		}
 	}
 	glEnd ();

@@ -1,6 +1,9 @@
 #include<GL/glut.h>
 #include<vector>
 #include<algorithm>
+#include<iostream>
+#include<set>
+using namespace std;
 #define DEBUG
 #ifdef DEBUG
 #define dprintf printf
@@ -16,6 +19,25 @@ typedef struct point {
 	float x;
 	float y;
 }point;
+//bool operator < (const point& l, const point& r) {
+//	return l.x<
+//	point t1;
+//	t1.x = ((float)((int)(l.x * 1000))) / 1000;
+//	t1.y = ((float)((int)(l.y *1000 )))/1000;
+//	point t2;
+//	t2.x = ((float)((int)(r.x * 1000))) / 1000;
+//	t2.y = ((float)((int)(r.y * 1000))) / 1000;
+//
+//	if (t1.x == t2.x && t1.y==t2.y)return false;
+//	if (t1.x < t2.x) {
+//		return true;
+//	} else {
+//		return t1.y < t2.y;
+//	}
+//}
+//bool operator == (point& p1, point p2) {
+//	return p1.x == p2.x && p1.y == p2.y;
+//}
 typedef point Edge[2];
 typedef vector<point> points;
 typedef vector<points> polys;
@@ -62,7 +84,7 @@ void shClipEdge (points Inpoints, points& output_points, Edge clip_line) {
 			return  false;
 		}
 	};
-	//直线段p1p2和窗口边界求交，返回交点；
+	//直线段p1p2和窗口边界求交，返回交点；类似LB裁剪算法
 	auto getInterPoint = [](point& p1, point& p2, Edge clip_line)->point {
 		point inter_point;
 		if (clip_line[0].y == clip_line[1].y) {//水平裁剪边
@@ -81,13 +103,13 @@ void shClipEdge (points Inpoints, points& output_points, Edge clip_line) {
 
 	for (point p2:Inpoints) {
 		if (isInside (p2, clip_line)) {
-			if (isInside (p1, clip_line)) {//头尾都内，尾入形，引因为头必已在形
-				output_points.push_back (p2);
-			}else { //头外尾内，交尾入形
+			if (isInside (p1, clip_line)) {//头尾都内，尾入形，引因为头必已在形 内
+				output_points.push_back (p2); 
+			}else { //头外尾内，交尾入形 入
 				output_points.push_back(getInterPoint (p1, p2, clip_line));
 				output_points.push_back(p2);
 			}
-		} else if (isInside (p1, clip_line)) { //头内尾外，交点入队
+		} else if (isInside (p1, clip_line)) { //头内尾外，交入队 出
 			output_points.push_back(getInterPoint (p1, p2, clip_line));
 		} //头尾均外，没有点入形
 		p1 = p2;
@@ -136,9 +158,18 @@ void shClip (points& Inpoints, int Inlength, rectangle rect) {
 	clip_line[1].y = rect.top;
 	shClipEdge (output_points2, output_points3, clip_line);
 
+	set<point> drawed;
 	glColor3f (1, 0, 0);
 	for (int i = 0; i < output_points3.size() - 1; i++) {
+		//if (drawed.find(output_points3[i])!=drawed.end()) {
+		//	cout << "此点绘制过\n";
+
+		//} else {
 		drawLine (output_points3[i], output_points3[i + 1]);
+		//drawed.insert(output_points3[i]);
+		//}
+
+
 	}
 	drawLine (output_points3[output_points3.size() - 1], output_points3[0]);
 
