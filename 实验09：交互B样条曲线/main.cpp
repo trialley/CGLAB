@@ -19,7 +19,7 @@ using namespace std;
 typedef struct point {
 	float x;
 	float y;
-	point (float xi, float yi) :x (xi), y (yi) {}
+	point (float xi=0, float yi=0) :x (xi), y (yi) {}
 }point;
 bool operator == (point& p1, point p2) {
 	return p1.x == p2.x && p1.y == p2.y;
@@ -34,18 +34,47 @@ void drawLine (point& p1, point& p2) {
 	glEnd ();
 }
 
+void  drawBSpline (const int& k, const points& pointsi){	//绘制 B 样条曲线
+	//注意这里输入的 k 是阶数不是次数
+	vector<point> inner_points (pointsi);
+
+	float step = 0.01;	//步长
+
+	point iter;
+	point prev;
+
+	glColor3ub (255, 0, 0);	//设定曲线颜色
+	//glLineWidth (1);
+	glBegin (GL_LINE_STRIP);
+	for (float t = k - 1; t < pointsi.size (); t += step) {	//t[i] = i
+		inner_points = pointsi;
+		for (int r = 0; r < k; r++) {	//r 作为顶点的阶
+			for (int i = t - k + r + 1; i <= t; i++) {
+				if (r == 0)break;
+				else {
+					iter = inner_points[i];
+					prev = inner_points[i - 1];
+					iter.x = (t - i) / (float)(k - r) * iter.x + (i + k - r - t) / (float)(k - r) * prev.x;
+					iter.y = (t - i) / (float)(k - r) * iter.y + (i + k - r - t) / (float)(k - r) * prev.y;
+					inner_points[i] = iter;
+				}
+			}
+		}
+		glVertex2i (iter.x, iter.y);
+	}
+	glEnd ();
+	glFlush ();
+}
 void drawBezier (points& input_vertice, int maxn) {
-	int k = maxn;
-	vector<point> b_spline;
-	points control_point=input_vertice;
-	int n = control_point.size () - 1;
+	int k = maxn;//k阶
+	vector<point> b_spline;//曲线点集
+	points P=input_vertice;//控制点集合
+	int n = P.size () - 1;
 	//cout <<"control_point_size-1=" << n << endl;
 
+
 	float* t=new float[100*maxn];
-	//均匀B样条
-	/*for (int i = 0; i <= input_vertice.size() + k; i++)
-		t[i] = i + 1;*/
-		//准均匀B样条
+
 	t[0] = 0;
 	for (int i = 0; i <= k - 1; i++)
 		t[i] = 0;
@@ -54,13 +83,20 @@ void drawBezier (points& input_vertice, int maxn) {
 	for (int i = n + 1; i <= n + k; i++)
 		t[i] = 1;
 
-	for (int j = k - 1; j <= n; j++)//j为区间的末端点
-	{
-		for (double u = t[j]; u <= t[j + 1]; u += 0.001 / n) {
-			for (int r = 1; r <= k - 1; r++)//递推k-1层
-			{
-				for (int i = j; i >= j - k + r + 1; i--)//由递推公式得，需要倒着来，i和i-1存在i中；；bezier为j和j+1存在j中
-				{
+	//j为区间末端点编号 从n到k-1,
+	for (int j = k - 1; j <= n; j++){
+
+
+		for (double u = t[j]; u <= t[j + 1]; u += 0.1 / n) {
+			
+			//阶数是次数加一，次数是阶数减一，递推k-1层
+			//最后一轮循环获得pt
+			for (int r = 1; r <= k - 1; r++){
+				
+				//由递推公式得，需要倒着来，i和i-1存在i中；；bezier为i和i+1存在i中
+				//可参考图像
+				//阶数定了，曲线分段数也定了，是阶数段，为了分那么多段
+				for (int i = j; i >= j - k + r + 1; i--){
 					float x1 = u - t[i];
 					float x2 = t[i + k - r] - t[i];
 					float y1 = t[i + k - r] - u;
@@ -75,19 +111,17 @@ void drawBezier (points& input_vertice, int maxn) {
 						coefficient2 = 0;
 					else
 						coefficient2 = y1 / y2;
-
-					if (r == 1)//第一轮必须是输入的那几个控制点
-					{
-						control_point[i].x = input_vertice[i].x * coefficient1 + input_vertice[i - 1].x * coefficient2;
-						control_point[i].y = input_vertice[i].y * coefficient1 + input_vertice[i - 1].y * coefficient2;
-						continue;
+//第一轮必须是输入的那几个控制点
+					if (r == 1){
+						P[i].x = input_vertice[i].x * coefficient1 + input_vertice[i - 1].x * coefficient2;
+						P[i].y = input_vertice[i].y * coefficient1 + input_vertice[i - 1].y * coefficient2;
 					} else {
-						control_point[i].x = control_point[i].x * coefficient1 + control_point[i - 1].x * coefficient2;
-						control_point[i].y = control_point[i].y * coefficient1 + control_point[i - 1].y * coefficient2;
+						P[i].x = P[i].x * coefficient1 + P[i - 1].x * coefficient2;
+						P[i].y = P[i].y * coefficient1 + P[i - 1].y * coefficient2;
 					}
 				}
 			}
-			b_spline.push_back (control_point[j]);//递推的最后一层的点，即为求得的点
+			b_spline.push_back (P[j]);//递推的最后一层的点，即为求得的点
 		}
 	}
 	//cout << "BSpline size = :" << b_spline.size() << endl;
@@ -129,16 +163,20 @@ point* chosed_point = nullptr;
 int segi = 1;
 void segiinc() {
 	if (segi >= temp_poly.size ()) {
-		cout << "无法继续增加分段\n";
+		cout << "无法继续增加阶数\n";
 	} else {
 		segi++;
+		cout << "阶数" << segi << "\n";
+
 	}
 }
 void segidec () {
 	if (segi <= 1) {
-		cout << "无法继续减少分段\n";
+		cout << "无法继续减少阶数\n";
 	} else {
 		segi--;
+		cout << "阶数" << segi << "\n";
+
 	}
 }
 void display (void) {
@@ -151,7 +189,8 @@ void display (void) {
 	}
 
 	if (temp_poly.size () >= 2) {
-		drawBezier (temp_poly, segi);
+		//drawBezier (temp_poly, segi);
+		drawBSpline (segi, temp_poly);
 	}
 
 
@@ -368,7 +407,7 @@ int main (int argc, char** argv) {
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);	//设置显示模式
 	glutInitWindowPosition (600, 100);				//设置窗口的顶部和左边位置
 	glutInitWindowSize (SCREENX, SCREENY);					//设置窗口的高度和宽度
-	glutCreateWindow ("实验08：交互Bezier曲线");	//设置窗口标题
+	glutCreateWindow ("实验08：交互B样条曲线");	//设置窗口标题
 	glClearColor (0, 0, 0, 0);							//设置窗口背景颜色
 	glMatrixMode (GL_PROJECTION);					//设置窗口视图
 	gluOrtho2D (0, SCREENX, 0, SCREENY);

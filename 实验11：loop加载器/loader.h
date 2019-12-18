@@ -9,7 +9,7 @@
 #pragma comment(lib, "./glut32.lib")
 using namespace std;
 
-class offloader {
+class loader {
 public:
 	int numOfVertex = 0;
 	int numOfFace = 0;
@@ -110,7 +110,7 @@ public:
 			vertexs = new int[nv];
 		}
 	};
-	struct nedge {
+	struct nedge {//
 		int start;
 		int middle;
 		halfedge* he;
@@ -122,7 +122,37 @@ public:
 			middle = -1;
 		}
 	};
-	void readFile (string file) {//读取文件
+	//int readobj (string filename) {
+	//	FILE* fp;
+	//	n_face = 0;
+	//	n_node = 0;
+	//	if (!(fp = fopen (filename.c_str (), "r"))) {
+	//		fprintf (stderr, "Open fail");
+	//		return 0;
+	//	}
+	//	ifstream in (filename);
+	//	string BUFFER;
+	//	while (getline (in, BUFFER)) {
+	//		if (BUFFER[0] == 'v') {
+	//			Vertex ver;
+	//			sscanf (BUFFER.c_str (), "%*c%f%f%f", &ver.x, &ver.y, &ver.z);
+	//			vertex.push_back (ver);
+	//			n_node++;
+	//		} else if (BUFFER[0] == 'f') {
+	//			Face f;
+	//			sscanf (BUFFER.c_str (), "%*c%d%d%d", &f.order[0], &f.order[1], &f.order[2]);
+	//			f.num = 3;
+	//			f.order[0]--;
+	//			f.order[1]--;
+	//			f.order[2]--;
+	//			face.push_back (f);
+	//			n_face++;
+	//		}
+	//	}
+
+
+	//}
+	void readoff (string file) {//读取文件
 		char data[100];
 		ifstream infile;
 		infile.open (file);
@@ -189,12 +219,13 @@ public:
 		}
 
 	}
-	void initHalfedge () {//初始化半边结构
+	void initHalfedge () {//初始化半边
 		hefaces = new he_face * [numOfFace];
 		int numofhe = 0;
 		for (int i = 0; i < numOfVertex; i++) {
 			iedges[i] = nullptr;
 		}
+
 		for (int i = 0; i < numOfFace; i++) {
 			int v1 = faces[i].vertexs[0];
 			int v2 = faces[i].vertexs[1];
@@ -205,9 +236,9 @@ public:
 			halfedge* he3 = getHalfEdge (v3, v1, iedges);
 			if (he1 == nullptr) {
 				he1 = new halfedge ();
-				he1->end = v2;
+				he1->end = v2;//指向下一个点
 				halfedge* opposite1 = new halfedge ();
-				opposite1->end = v1;
+				opposite1->end = v1;//对面指向这条边的起点
 				opposite1->opposite = he1;
 				he1->opposite = opposite1;
 				nedge* temp = iedges[v1];
@@ -215,7 +246,7 @@ public:
 				tempi->start = v1;
 				tempi->he = he1;
 				if (temp == nullptr) {
-					iedges[v1] = tempi;
+					iedges[v1] = tempi;//设置顶点1开始的半边
 				} else {
 					while (temp->next != nullptr) {
 						temp = temp->next;
@@ -301,21 +332,23 @@ public:
 				}
 			}
 
-			he1->next = he2;
+			he1->next = he2;//半边成环
 			he2->next = he3;
 			he3->next = he1;
 
-			hf->edge = he1;
+			hf->edge = he1;//面与半边链接
 			he1->face = hf;
 			he2->face = hf;
 			he3->face = hf;
+
+			//给顶点设置起始半边
 			if (vertexs[v1].edge == nullptr)
 				vertexs[v1].edge = he1;
 			if (vertexs[v2].edge == nullptr)
 				vertexs[v2].edge = he2;
 			if (vertexs[v3].edge == nullptr)
 				vertexs[v3].edge = he3;
-			hefaces[i] = hf;
+			hefaces[i] = hf;//记录该面
 		}
 
 	}
@@ -326,11 +359,11 @@ public:
 		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glColor3f (1.0, 1.0, 1.0);
 		for (int i = 0; i < numOfFace; i++) {
-			halfedge* e = hefaces[i]->edge;
+			halfedge* e = hefaces[i]->edge;//对于每一个面
 			vertex v1 = vertexs[e->end];
 			vertex v2 = vertexs[e->next->end];
 			vertex v3 = vertexs[e->next->next->end];
-			glBegin (GL_POLYGON);
+			glBegin (GL_POLYGON);//都形成一个多边形
 			glNormal3f (normalvectors[i].x, normalvectors[i].y, normalvectors[i].z);
 			glVertex3f (v1.x, v1.y, v1.z);
 			glVertex3f (v2.x, v2.y, v2.z);
@@ -372,7 +405,7 @@ public:
 	}
 
 //loop细分算法
-	void loopDivision () {
+	void loop () {
 
 		vertex* newvertexs = new vertex[numOfVertex + 1.5 * numOfFace];	//新添加顶点数组
 		he_face** nfaces = new he_face * [4 * numOfFace];	//新添加面数组
@@ -389,15 +422,15 @@ public:
 			halfedge* hedge = vertexs[i].edge;//对于每个边
 			do {
 				n++;//统计该点有多少邻接点
-				halfedge* thedge = hedge->opposite->next;
+				halfedge* thedge = hedge->opposite->next;//出去
 				if (thedge) {
-				hedge = hedge->opposite->next;
+				hedge = hedge->opposite->next;//回来
 
 				}else { cout << "无法细分\n"; return; }
 			} while (hedge != vertexs[i].edge);
 
-
-			float beta = (5.0 / 8 - pow ((3.0 / 8 + cos (2 * PI / n) / 4), 2)) / n;//计算beta
+			 //计算beta
+			float beta = (5.0 / 8 - pow ((3.0 / 8 + cos (2 * PI / n) / 4), 2)) / n;
 
 			float sumpx = 0;
 			float sumpy = 0;
@@ -749,7 +782,7 @@ public:
 		switch (key) {
 		case '\r':
 		{
-			loopDivision ();
+			loop ();
 
 			break;
 		}
@@ -844,7 +877,7 @@ public:
 		glPopMatrix ();
 	}
 	void load (string file) {
-		readFile (file);
+		readoff (file);
 		iedges = new nedge * [numOfVertex];
 		initHalfedge ();
 		cout << "加载完成" << endl;
@@ -880,7 +913,7 @@ public:
 		light3 = false;
 		displaystate = 2;
 		PI = 3.1415926;
-		readFile (file);
+		readoff (file);
 		iedges = new nedge * [numOfVertex];
 		initHalfedge ();
 		cout << "重新加载完成" << endl;

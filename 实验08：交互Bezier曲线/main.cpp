@@ -38,12 +38,16 @@ void drawDEBOORBezier (points& points,int segi) {
 		//double d = 1.0 / (segi * n);
 		double d = 1.0 /  (float)segi;
 		//cout << "t=" << d<<"\n";
+
+		/*三重循环，一重分点，一重迭代，一重遍历*/
 		/*进行递推的循环，共需要进行n-1次递推计算*/
 		for (double t = 0.0; t <= 1; t += d) {
 			vector<point> temp;
 
-			/*第 i 次递推，需要计算n-i个新的点*/
+			/*本循环迭代   第 i 次递推，需要计算n-i个新的点*/
 			for (int i = 1; i < n; ++i) {
+
+				/*本循环遍历*/
 				for (int j = 0; j < n - i; ++j) {
 					if (i == 1) {// i==1时,第一次迭代,由已知控制点计算 
 						temp.push_back (

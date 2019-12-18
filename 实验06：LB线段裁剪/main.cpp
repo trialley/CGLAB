@@ -62,7 +62,7 @@ dy>0 p3<0 guob p4>0 guot
 入边u与0比找最大 p<0
 出边u与1比找最小 p>0
 */
-void LB_LineClip (float x1, float y1, float x2, float y2, float XL, float XR, float YB, float YT) {
+void lbLineClip (float x1, float y1, float x2, float y2, float XL, float XR, float YB, float YT) {
 	glColor3f (1, 1, 1);
 
 	glBegin (GL_LINES);
@@ -130,7 +130,7 @@ point* chosed_point = nullptr;
 void display (void) {
 	glClear (GL_COLOR_BUFFER_BIT);
 	for(auto i : lines) {
-		LB_LineClip (i.start.x, i.start.y, i.end.x, i.end.y,rec.left,rec.right,rec.bottom,rec.top);
+		lbLineClip (i.start.x, i.start.y, i.end.x, i.end.y,rec.left,rec.right,rec.bottom,rec.top);
 	}
 
 	glColor3f (1, 1, 1);

@@ -5,13 +5,13 @@
 #include<string>
 #include<queue>
 #include "glut.h"
-#include"offloader.h"
+#include"loader.h"
 #pragma comment(lib, "./glut32.lib")
 using namespace std;
 
 
 /*加载器*/
-offloader loader;
+loader loader1;
 
 /*确定窗口大小*/
 int WIDTH = 700;
@@ -29,18 +29,18 @@ void onMouseClick (int button, int state, int x, int y) {
 		py = y;
 	}
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
-			loader.displaystate = (loader.displaystate + 1) % 3;
+			loader1.displaystate = (loader1.displaystate + 1) % 3;
 	}
 	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) {
 		string temp = getFilePathName ();
 		cout << "新文件：" << temp << "\n";
-		loader.reload (temp);
+		loader1.reload (temp);
 	}
 	if (button == GLUT_WHEEL_DOWN) {
-		loader.scale/=2;
+		loader1.scale/=2;
 	}
 	if (button == GLUT_WHEEL_UP) {
-		loader.scale*=2;
+		loader1.scale*=2;
 	}
 
 	glutPostRedisplay ();
@@ -52,35 +52,35 @@ void onMouseMove (int x, int y) {
 	if (x - px > 2) {
 		theta1 -= 0.1;
 		px = x;
-		loader.rotate (theta1, theta2);
+		loader1.rotate (theta1, theta2);
 	} else if (x - px < -2) {
 		theta1 += 0.1;
 		px = x;
-		loader.rotate (theta1, theta2);
+		loader1.rotate (theta1, theta2);
 	}
 
 	if (y - py > 5) {
 		theta2 += 0.1;
 		py = y;
-		loader.rotate (theta1, theta2);
+		loader1.rotate (theta1, theta2);
 	}else if (y - py < -5) {
 		theta2 -= 0.1;
 		py = y;
-		loader.rotate (theta1, theta2);
+		loader1.rotate (theta1, theta2);
 	}
 
 }
 void onKeyboardPress (unsigned char key, int mouseX, int mouseY) {
 	switch (key) {
 	case '\r':
-		loader.loopDivision ();
+		loader1.loop ();
 		break;
 	}
 	glutPostRedisplay ();
 }
 
 void myDisplay () {
-	loader.display ();
+	loader1.display ();
 }
 
 void reshape (int width, int height) {
@@ -117,7 +117,7 @@ int main (int argc, char* argv[]) {
 	glutDisplayFunc (&myDisplay);
 	glutReshapeFunc (&reshape);
 
-	loader.load("../off/bunny.off");
+	loader1.load("../off/bunny.off");
 	
 	glutMainLoop ();
 	return 0;

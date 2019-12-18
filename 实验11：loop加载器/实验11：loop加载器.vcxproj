@@ -23,6 +23,7 @@
     <ProjectGuid>{1A05D657-DFB9-421D-BDBE-DAA7CAF5E12A}</ProjectGuid>
     <RootNamespace>实验11loop加载器</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>实验11：loop细分</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -139,7 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="getFilePathName.h" />
-    <ClInclude Include="offloader.h" />
+    <ClInclude Include="loader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
