@@ -36,31 +36,33 @@ void drawLine (point& p1, point& p2) {
 
 void  drawBSpline (const int& k, const points& pointsi){	//绘制 B 样条曲线
 	//注意这里输入的 k 是阶数不是次数
-	vector<point> inner_points (pointsi);
+	vector<point> tpoints (pointsi);
 
-	float step = 0.01;	//步长
-
-	point iter;
-	point prev;
+	float d = 0.1;	//步长
 
 	glColor3ub (255, 0, 0);	//设定曲线颜色
 	//glLineWidth (1);
 	glBegin (GL_LINE_STRIP);
-	for (float t = k - 1; t < pointsi.size (); t += step) {	//t[i] = i
-		inner_points = pointsi;
-		for (int r = 0; r < k; r++) {	//r 作为顶点的阶
-			for (int i = t - k + r + 1; i <= t; i++) {
+
+	//不的点，用的支撑区间相同
+	for (float j = k - 1; j < pointsi.size (); j += d) {
+		tpoints = pointsi;
+
+		//0-k次递推
+		for (int r = 1; r < k; r++) {
+			//if (r == 1)cout << "支撑点："<<int (j - k + r)<<" ";
+			//每次递推多少元素，逐级减少才对
+			for (int i = j - k + r+1 ; i <= j; i++) {
+				//if(r==1)cout << i << " ";
 				if (r == 0)break;
 				else {
-					iter = inner_points[i];
-					prev = inner_points[i - 1];
-					iter.x = (t - i) / (float)(k - r) * iter.x + (i + k - r - t) / (float)(k - r) * prev.x;
-					iter.y = (t - i) / (float)(k - r) * iter.y + (i + k - r - t) / (float)(k - r) * prev.y;
-					inner_points[i] = iter;
+					tpoints[i].x = (float)(j - i) / (float)(k - r) * tpoints[i].x + (float)(i + k - r - j) / (float)(k - r) * tpoints[i - 1].x;
+					tpoints[i].y = (float)(j - i) / (float)(k - r) * tpoints[i].y + (float)(i + k - r - j) / (float)(k - r) * tpoints[i - 1].y;
 				}
 			}
+			//if (r == 1)cout <<"\n";
 		}
-		glVertex2i (iter.x, iter.y);
+		glVertex2i (tpoints[j].x, tpoints[j].y);
 	}
 	glEnd ();
 	glFlush ();
@@ -402,6 +404,9 @@ void keyPress (unsigned char key, int x, int y) {
 }
 
 int main (int argc, char** argv) {
+	ios::sync_with_stdio (0);
+	cin.tie (0);
+	cout.tie (0);
 	stated = DRAWING_POLY;
 	glutInit (&argc, argv);							//初始化
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);	//设置显示模式

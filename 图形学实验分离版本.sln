@@ -23,7 +23,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "实验09：交互B样条曲
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "实验10：模型操作与片元选取", "实验10：模型操作与片元选取\实验10：模型操作与片元选取.vcxproj", "{5F7E1EA0-C593-4F96-AC78-080F34F05E0F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "实验11：loop加载器", "实验11：loop加载器\实验11：loop加载器.vcxproj", "{1A05D657-DFB9-421D-BDBE-DAA7CAF5E12A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "实验11：loop细分", "实验11：loop加载器\实验11：loop加载器.vcxproj", "{1A05D657-DFB9-421D-BDBE-DAA7CAF5E12A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

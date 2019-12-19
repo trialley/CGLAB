@@ -70,7 +70,7 @@ void lbLineClip (float x1, float y1, float x2, float y2, float XL, float XR, flo
 	glVertex2f (x1, y1);
 	glVertex2f (x2, y2);
 	glEnd ();
-	auto ClipT = [](float p, float q, float* u1, float* u2)->bool {
+	auto clipEdge = [](float p, float q, float* u1, float* u2)->bool {
 		float r;
 		if (p < 0) {
 			r = q / p;
@@ -93,10 +93,10 @@ void lbLineClip (float x1, float y1, float x2, float y2, float XL, float XR, flo
 	u2 = 1;//大的
 	dx = x2 - x1;
 	dy = y2 - y1;
-	if (ClipT (-dx, x1 - XL, &u1, &u2))//p1=-dx q1=x1-XL  左
-		if (ClipT (dx, XR - x1, &u1, &u2))//p2=dx q2=XR-x1  右
-			if (ClipT (-dy, y1 - YB, &u1, &u2))//p3=-dy q3=y1-YB  下
-				if (ClipT (dy, YT - y1, &u1, &u2))//p4=dy q4=YT-y1  上
+	if (clipEdge (-dx, x1 - XL, &u1, &u2))//p1=-dx q1=x1-XL  左
+		if (clipEdge (dx, XR - x1, &u1, &u2))//p2=dx q2=XR-x1  右
+			if (clipEdge (-dy, y1 - YB, &u1, &u2))//p3=-dy q3=y1-YB  下
+				if (clipEdge (dy, YT - y1, &u1, &u2))//p4=dy q4=YT-y1  上
 				{
 					glColor3f (1,0,0);
 					glBegin (GL_LINES);
@@ -132,6 +132,16 @@ void display (void) {
 	for(auto i : lines) {
 		lbLineClip (i.start.x, i.start.y, i.end.x, i.end.y,rec.left,rec.right,rec.bottom,rec.top);
 	}
+
+	/*画点*/
+	glPointSize (5);
+	glColor3f (1.0, 1.0, 1.0);
+	glBegin (GL_POINTS);
+	for (auto i : lines) {
+		glVertex2i (i.start.x, i.start.y);
+		glVertex2i (i.end.x, i.end.y);
+	}
+	glEnd ();
 
 	glColor3f (1, 1, 1);
 	glBegin (GL_LINE_LOOP);

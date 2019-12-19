@@ -152,8 +152,6 @@ public:
 	//			n_face++;
 	//		}
 	//	}
-
-
 	//}
 	void insertIedge (vector<nedge*>& iedges, nedge* ie) {
 		nedge* it = iedges[ie->start];

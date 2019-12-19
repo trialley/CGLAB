@@ -204,7 +204,7 @@ void display (void) {
 	}
 	glEnd ();
 
-
+	glColor3f (1.0, .0, .0);
 	glBegin (GL_POINTS);
 	for (auto i : temp_poly) {
 		glVertex2i (i.x, i.y);

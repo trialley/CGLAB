@@ -19,25 +19,9 @@ typedef struct point {
 	float x;
 	float y;
 }point;
-//bool operator < (const point& l, const point& r) {
-//	return l.x<
-//	point t1;
-//	t1.x = ((float)((int)(l.x * 1000))) / 1000;
-//	t1.y = ((float)((int)(l.y *1000 )))/1000;
-//	point t2;
-//	t2.x = ((float)((int)(r.x * 1000))) / 1000;
-//	t2.y = ((float)((int)(r.y * 1000))) / 1000;
-//
-//	if (t1.x == t2.x && t1.y==t2.y)return false;
-//	if (t1.x < t2.x) {
-//		return true;
-//	} else {
-//		return t1.y < t2.y;
-//	}
-//}
-//bool operator == (point& p1, point p2) {
-//	return p1.x == p2.x && p1.y == p2.y;
-//}
+bool operator == (point& p1, point p2) {
+	return p1.x == p2.x && p1.y == p2.y;
+}
 typedef point Edge[2];
 typedef vector<point> points;
 typedef vector<points> polys;
@@ -64,7 +48,7 @@ void drawLine (point& p1, point& p2) {
 分而治之的思想
 一条线裁剪，如何连接新点与旧点？
 */
-void shClipEdge (points Inpoints, points& output_points, Edge clip_line) {
+void clipEdge (points Inpoints, points& output_points, Edge clip_line) {
 	auto isInside = [](point& Testp2t, Edge clip_line)->bool {
 		if (clip_line[1].x > clip_line[0].x) {//裁剪边为窗口下边
 			if (Testp2t.y >= clip_line[0].y)
@@ -132,7 +116,7 @@ void shClip (points& Inpoints, int Inlength, rectangle rect) {
 	clip_line[0].y = rect.bottom;
 	clip_line[1].x = rect.right;
 	clip_line[1].y = rect.bottom;
-	shClipEdge (Inpoints, output_points, clip_line);
+	clipEdge (Inpoints, output_points, clip_line);
 	//然后使用窗口shang边界进行切割
 	points output_points1;
 	int Outlength1 = 0;
@@ -140,7 +124,7 @@ void shClip (points& Inpoints, int Inlength, rectangle rect) {
 	clip_line[0].y = rect.top;
 	clip_line[1].x = rect.left;
 	clip_line[1].y = rect.top;
-	shClipEdge (output_points, output_points1, clip_line);
+	clipEdge (output_points, output_points1, clip_line);
 	//然后使用窗口左边界进行切割
 	points output_points2;
 	int Outlength2 = 0;
@@ -148,7 +132,7 @@ void shClip (points& Inpoints, int Inlength, rectangle rect) {
 	clip_line[0].y = rect.top;
 	clip_line[1].x = rect.left;
 	clip_line[1].y = rect.bottom;
-	shClipEdge (output_points1, output_points2, clip_line);
+	clipEdge (output_points1, output_points2, clip_line);
 	//然后使用窗口右边界进行切割
 	points output_points3;
 	int Outlength3 = 0;
@@ -156,20 +140,12 @@ void shClip (points& Inpoints, int Inlength, rectangle rect) {
 	clip_line[0].y = rect.bottom;
 	clip_line[1].x = rect.right;
 	clip_line[1].y = rect.top;
-	shClipEdge (output_points2, output_points3, clip_line);
+	clipEdge (output_points2, output_points3, clip_line);
 
 	set<point> drawed;
 	glColor3f (1, 0, 0);
 	for (int i = 0; i < output_points3.size() - 1; i++) {
-		//if (drawed.find(output_points3[i])!=drawed.end()) {
-		//	cout << "此点绘制过\n";
-
-		//} else {
 		drawLine (output_points3[i], output_points3[i + 1]);
-		//drawed.insert(output_points3[i]);
-		//}
-
-
 	}
 	drawLine (output_points3[output_points3.size() - 1], output_points3[0]);
 
@@ -177,15 +153,18 @@ void shClip (points& Inpoints, int Inlength, rectangle rect) {
 }
 
 /*------------------窗口功能相关-----------------*/
+rectangle rec;
 const int SCREENY = 500;
 const int SCREENX = 500;
 points pointsd = { {250,50},{550,150},{550,400},{250,250},{100,350},{100,100},{120,30} }; //多边形顶点
 points temp_poly;
 typedef enum state { MOVING_POINT, ADDING_POINT, DRAWING_POLY, DRAWING_DONE } state;
-typedef enum menufunc { CLEAR, START_MOV_POINT, START_ADD_POINT, START_DEL_POINT };
+typedef enum addstate { ADD = 9999, INSERT, DELETEP } add;
+typedef enum menufunc { CLEAR, INC_SEG, DEC_SEG };
+addstate addstated = ADD;
 state stated = DRAWING_POLY;
 point* chosed_point = nullptr;
-rectangle rec;
+int segi = 1;
 void display (void) {
 	glClear (GL_COLOR_BUFFER_BIT);
 	glColor3f (1, 1, 1);
@@ -198,15 +177,25 @@ void display (void) {
 	if (temp_poly.size () >= 3) {
 		shClip (temp_poly,temp_poly.size(),rec);
 	}
+
+	/*画点*/
+	glPointSize (5);
+	glColor3f (1.0, 1.0, 1.0);
+	glBegin (GL_POINTS);
+	for (auto i : temp_poly) {
+		glVertex2i (i.x, i.y);
+	}
+	glEnd ();
 	glutSwapBuffers ();
 }
+
 inline float calDistance (point a1, point a2) {
 	return pow ((pow ((a1.x - a2.x), 2) + pow ((a1.y - a2.y), 2)), 0.5);
 };
-point* getClosetPoint (int xi, int yi) {
+point* getClosetPoint (float xi, float yi) {
 	point* temp = nullptr;
 	float tempdis = 999999999;
-	point click = { xi,yi };
+	point click = { (float)xi,yi };
 	for (point& i : temp_poly) {
 		float temp1 = calDistance (click, i);
 		if (temp1 < tempdis) {
@@ -221,12 +210,30 @@ point* getClosetPoint (int xi, int yi) {
 	dprintf ("选中了点：(%f, %f)，于位置：%p\n", temp->x, temp->y, temp);
 	return temp;
 }
+void insertPoint (int x, int y) {
+	point ti = { (float)x,(float)y };
+	point* t1 = getClosetPoint (x, y);
+	if (t1 == nullptr) {
+		printf ("无法找到合适的插入点\n");
+	} else {
 
+		temp_poly.insert (find (temp_poly.begin (), temp_poly.end (), *t1), ti);
+	}
+
+}
 /*鼠标按键回调*/
 void mouseButton (int button, int state, int xi, int yi) {
 	float x = xi;
 	float y = SCREENY - yi;
 	point temp_point = { x,y };
+
+	//if (button == GLUT_WHEEL_DOWN) {
+	//	segidec ();
+	//}
+	//if (button == GLUT_WHEEL_UP) {
+	//	segiinc ();
+	//}
+
 	switch (stated) {
 	case MOVING_POINT:
 		if (button == GLUT_MIDDLE_BUTTON && state == GLUT_UP) {
@@ -240,11 +247,39 @@ void mouseButton (int button, int state, int xi, int yi) {
 		break;
 	case DRAWING_POLY:
 		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-			//if (find (temp_poly.begin (), temp_poly.end (), temp_point) == temp_poly.end ()) {//没有点击重复点
+			switch (addstated) {
+			case ADD:
+				dprintf ("添加点(%f, %f)\n", temp_point.x, temp_point.y);
+				temp_poly.emplace_back (temp_point);
+				break;
+			case INSERT:
+				if (temp_poly.size () < 2) {
+					printf ("抱歉，当前点数目小于2，无法插入，请您添加更多点，默认选择添加点\n");
+					dprintf ("添加点(%f, %f)\n", temp_point.x, temp_point.y);
+					temp_poly.emplace_back (temp_point);
+				} else {
+					dprintf ("插入点(%f, %f)\n", temp_point.x, temp_point.y);
+					insertPoint (temp_point.x, temp_point.y);
+				}
+				break;
+			case DELETEP:
+				if (temp_poly.size () < 2) {
+					printf ("抱歉，当前点数目小于1，无法删除，请您添加更多点\n");
 
-			//}
-			dprintf ("添加点(%f, %f)\n", temp_point.x, temp_point.y);
-			temp_poly.emplace_back (temp_point);
+				} else {
+					point* to_be_delete = getClosetPoint (temp_point.x, temp_point.y);
+					if (to_be_delete == nullptr) {
+						printf ("抱歉，未选中任何点，无法删除\n");
+					} else {
+						dprintf ("删除点(%f, %f)\n", temp_point.x, temp_point.y);
+						temp_poly.erase (find (temp_poly.begin (), temp_poly.end (), *to_be_delete));
+
+					}
+				}
+				break;
+			default:
+				break;
+			}
 
 		}
 		if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) {
@@ -264,7 +299,11 @@ void mouseButton (int button, int state, int xi, int yi) {
 	default:
 		break;
 	}
+	glutPostRedisplay ();
+
 }
+
+
 /*鼠标移动回调*/
 void mouseMove (int xi, int yi) {
 	float x = xi;
@@ -275,7 +314,6 @@ void mouseMove (int xi, int yi) {
 		chosed_point->x = x;
 		chosed_point->y = y;
 		dprintf ("当前点新位置(%f, %f)\n", chosed_point->x, chosed_point->y);
-		glutPostRedisplay ();
 		break;
 	case ADDING_POINT:
 		break;
@@ -287,6 +325,8 @@ void mouseMove (int xi, int yi) {
 	default:
 		break;
 	}
+	glutPostRedisplay ();
+
 }
 
 void menuCtr (int funci) {
@@ -296,14 +336,25 @@ void menuCtr (int funci) {
 		temp_poly.clear ();
 		dprintf ("清空所有记录\n");
 		break;
+	case ADD:
+		cout << "切换到添加点模式\n";
+		addstated = ADD;
+		break;
 
-		//case NOFUNC:
+	case INSERT:
+		cout << "切换到插入点模式\n";
+		addstated = INSERT;
+		break;
+
+	case DELETEP:
+		cout << "切换到删除点模式\n";
+		addstated = DELETEP;
+		break;
 	default:
 		break;
 	}
 	glutPostRedisplay ();
 }
-
 int main (int argc, char** argv) {
 	rec.top = 400;
 	rec.bottom = 100;
@@ -328,7 +379,11 @@ int main (int argc, char** argv) {
 	/*注册右键菜单栏*/
 	glutCreateMenu (menuCtr);
 	glutAddMenuEntry ("clear", CLEAR);
+	glutAddMenuEntry ("add", ADD);
+	glutAddMenuEntry ("insert", INSERT);
+	glutAddMenuEntry ("delete", DELETEP);
 	glutAttachMenu (GLUT_RIGHT_BUTTON);
+
 
 	glutMainLoop ();								//开始主循环
 	return 0;

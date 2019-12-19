@@ -31,7 +31,7 @@ void drawLine (point& p1, point& p2) {
 	glEnd ();
 }
 
-void drawDEBOORBezier (points& points,int segi) {
+void drawBezier (points& points,int segi) {
 
 		int n = points.size ();
 		vector<point> news;
@@ -92,10 +92,10 @@ state stated = DRAWING_POLY;
 point* chosed_point = nullptr;
 int segi = 1;
 void segiinc () {
-	if (segi >= 20) {
+	if (segi >= 64) {
 		cout << "精度过大\n";
 	} else {
-		segi++;
+		segi*=2;
 		cout << "分段"<<segi<<"\n";
 
 	}
@@ -106,7 +106,7 @@ void segidec () {
 	if (segi <= 1) {
 		cout << "无法继续减少精度\n";
 	} else {
-		segi--;
+		segi/=2;
 		cout << "分段" << segi << "\n";
 
 	}
@@ -123,7 +123,7 @@ void display (void) {
 	}
 
 	if (temp_poly.size () >= 2) {
-		drawDEBOORBezier (temp_poly, segi);
+		drawBezier (temp_poly, segi);
 	}
 
 
