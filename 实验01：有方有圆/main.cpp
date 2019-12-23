@@ -13,7 +13,6 @@ using namespace std;
 /printf
 #endif // DEBUG
 
-
 const GLfloat PI = 3.1415926;		//PI
 GLfloat rotation = 0;				//总旋转角度，每次time函数都加上rotation_d
 GLfloat rotation_d = 1;				//旋转速度，每次time函数把它加到rotation上

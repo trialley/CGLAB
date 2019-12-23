@@ -117,7 +117,7 @@ int main (int argc, char* argv[]) {
 	glutDisplayFunc (&myDisplay);
 	glutReshapeFunc (&reshape);
 
-	loader1.load("../off/bunny.off");
+	loader1.load("../off/bunny.offz");
 	
 	glutMainLoop ();
 	return 0;

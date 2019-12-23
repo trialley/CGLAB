@@ -6,6 +6,12 @@
 //#pragma comment(lib, "./igl_opengl_glfw.lib")
 //#pragma comment(lib, "./imgui.lib")
 //#pragma comment(lib, "./igl_opengl.lib")
+
+
+//顶点数 面片数 边数
+
+
+
 #include<glad/glad.h>
 #include <igl/readOFF.h>
 #include <igl/unproject_onto_mesh.h>
@@ -16,7 +22,7 @@ int main (int argc, char* argv[]) {
 	// Mesh with per-face color
 	Eigen::MatrixXd V;//保存点信息
 	Eigen::MatrixXi F;//保存面信息
-	igl::readOFF ("../off/cube.off", V, F);// Load a mesh in OFF format
+	igl::readOBJ ("../obj/cube.obj", V, F);// Load a mesh in OFF format
 
 	Eigen::MatrixXd C = Eigen::MatrixXd::Constant (F.rows (), 3, 1);//保存被选中的点 Eigen数学库
 	
@@ -28,7 +34,7 @@ int main (int argc, char* argv[]) {
 			std::string temp = getFilePathName ();
 			std::cout << temp<<"\n";
 
-			igl::readOFF (temp, V, F);// Load a mesh in OFF format
+			igl::readOBJ (temp, V, F);// Load a mesh in OFF format
 			C = Eigen::MatrixXd::Constant (F.rows (), 3, 1);//保存被选中的点 Eigen数学库
 			
 			viewer.data ().clear();

@@ -120,7 +120,7 @@ void bfs (int cup_a_capacity,int cup_b_capacity,int target_volume ) {
 
 		a_left = p.x + p.y - cup_b_capacity;
 
-		if (a_left >= 0 && steps[a_left][cup_b_capacity].visited == 0) {   //a倒入b，a有剩余，b不清楚
+		if (a_left >= 0 && steps[a_left][cup_b_capacity].visited == 0) {   //a倒入b，a有剩余
 			steps[a_left][cup_b_capacity].last_x = p.x;
 			steps[a_left][cup_b_capacity].last_y = p.y;
 			steps[a_left][cup_b_capacity].visited = 1;

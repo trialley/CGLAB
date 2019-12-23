@@ -11,7 +11,7 @@
 #endif
 using namespace std;
 
-
+//贝塞尔曲线(Bézier curve)，又
 /*------------------绘图算法相关-----------------*/
 typedef struct point {
 	float x;

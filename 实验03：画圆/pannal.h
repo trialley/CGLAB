@@ -229,9 +229,9 @@ namespace TA {
 			}
 			std::thread t (pannal::init, x, y,  slengthi);
 			t.detach ();
-			cout << "按住左键拖拽添加线段\n"
+			cout << "按住左键拖拽添加圆\n"
 				<<"按住中间拖拽移动端点\n"
-				<<"点击右键清屏或切换画线算法\n";
+				<<"点击右键清屏或切换画圆算法\n";
 		}
 
 		static void init (int x, int y,int slengthi) {

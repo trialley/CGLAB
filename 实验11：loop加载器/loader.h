@@ -125,45 +125,76 @@ public:
 			middle = -1;
 		}
 	};
+
 	//int readobj (string filename) {
-	//	FILE* fp;
-	//	n_face = 0;
-	//	n_node = 0;
-	//	if (!(fp = fopen (filename.c_str (), "r"))) {
-	//		fprintf (stderr, "Open fail");
-	//		return 0;
-	//	}
-	//	ifstream in (filename);
-	//	string BUFFER;
-	//	while (getline (in, BUFFER)) {
-	//		if (BUFFER[0] == 'v') {
-	//			Vertex ver;
-	//			sscanf (BUFFER.c_str (), "%*c%f%f%f", &ver.x, &ver.y, &ver.z);
-	//			vertex.push_back (ver);
-	//			n_node++;
-	//		} else if (BUFFER[0] == 'f') {
-	//			Face f;
-	//			sscanf (BUFFER.c_str (), "%*c%d%d%d", &f.order[0], &f.order[1], &f.order[2]);
-	//			f.num = 3;
-	//			f.order[0]--;
-	//			f.order[1]--;
-	//			f.order[2]--;
-	//			face.push_back (f);
-	//			n_face++;
-	//		}
-	//	}
-	//}
-	void insertIedge (vector<nedge*>& iedges, nedge* ie) {
-		nedge* it = iedges[ie->start];
-		if (it == nullptr) {
-			iedges[ie->start] = ie;
-		} else {
-			while (it->next != nullptr) {
-				it = it->next;
-			}
-			it->next = ie;
-		}
-	}
+//	FILE* fp;
+//	n_face = 0;
+//	n_node = 0;
+//	if (!(fp = fopen (filename.c_str (), "r"))) {
+//		fprintf (stderr, "Open fail");
+//		return 0;
+//	}
+//	ifstream in (filename);
+//	string BUFFER;
+//	while (getline (in, BUFFER)) {
+//		if (BUFFER[0] == 'v') {
+//			Vertex ver;
+//			sscanf (BUFFER.c_str (), "%*c%f%f%f", &ver.x, &ver.y, &ver.z);
+//			vertex.push_back (ver);
+//			n_node++;
+//		} else if (BUFFER[0] == 'f') {
+//			Face f;
+//			sscanf (BUFFER.c_str (), "%*c%d%d%d", &f.order[0], &f.order[1], &f.order[2]);
+//			f.num = 3;
+//			f.order[0]--;
+//			f.order[1]--;
+//			f.order[2]--;
+//			face.push_back (f);
+//			n_face++;
+//		}
+//	}
+//}
+//#pragma warning()
+//	void readobj (string filename) {
+//		numOfFace = 0;
+//		numOfVertex = 0;
+//		//FILE* fp;
+//		//if (!(fp = fopen (filename.c_str (), "r"))) {
+//		//	fprintf (stderr, "Open fail");
+//		//	return 0;
+//		//}
+//		vertexs.clear ();
+//		faces.clear ();
+//		ifstream in (filename);
+//		string BUFFER;
+//		while (getline (in, BUFFER)) {
+//			if (BUFFER[0] == 'v') {
+//				float x;
+//				float y;
+//				float z;
+//				sscanf (BUFFER.c_str (), "%*c%f%f%f", &x, &y, &z);
+//				vertexs.push_back (vertex (x, y, z));
+//				numOfVertex++;
+//			} else if (BUFFER[0] == 'f') {
+//				int numofv=3;
+//				//in >> numofv;
+//				sscanf (BUFFER.c_str (), "%*c");
+//				face f = face (numofv);
+//				for (int i = 0; i < numofv; i++) {
+//					int v;
+//					//in >> v;
+//					sscanf (BUFFER.c_str (), "%d",&v);
+//
+//					f.vertexs[i] = v;
+//				}
+//				faces.push_back (f);
+//				numOfFace++;
+//			}
+//		}
+//		in.close ();
+//
+//	}
+
 	void readoff (string file) {//¶ÁÈ¡ÎÄ¼þ
 		char data[100];
 		ifstream infile;
@@ -201,6 +232,18 @@ public:
 		}
 		infile.close ();
 	}
+	void insertIedge (vector<nedge*>& iedges, nedge* ie) {
+		nedge* it = iedges[ie->start];
+		if (it == nullptr) {
+			iedges[ie->start] = ie;
+		} else {
+			while (it->next != nullptr) {
+				it = it->next;
+			}
+			it->next = ie;
+		}
+	}
+
 	int getMiddle (int start, int end, vector<nedge*>& iedges) {
 		nedge* temp = iedges[start];
 		while (temp != nullptr) {
